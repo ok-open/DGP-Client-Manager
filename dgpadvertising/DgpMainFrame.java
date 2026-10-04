@@ -955,17 +955,32 @@ public class DgpMainFrame extends JFrame {
     JButton notes = createSecondaryButton("Show Notes");
     JButton specsBtn = createSecondaryButton("Show Specs");
 
+    JComboBox<String> sortBox = new JComboBox<>(
+        new String[]{
+                        "Sort by Date",
+                        "Start Date: Earliest → Latest",
+                        "Start Date: Latest → Earliest",
+                        "End Date: Earliest → Latest",
+                        "End Date: Latest → Earliest"
+                }
+        );
+
+sortBox.setFont(BODY_FONT);
+sortBox.setPreferredSize(new Dimension(220, 34));
+
     add.addActionListener(this::onAddProject);
     edit.addActionListener(this::onEditProject);
     del.addActionListener(this::onDeleteProject);
     notes.addActionListener(this::onShowNotes);
     specsBtn.addActionListener(this::onShowSpecs);
+    sortBox.addActionListener(e -> sortProjects((String) sortBox.getSelectedItem()));
 
     buttons.add(add);
     buttons.add(edit);
     buttons.add(del);
     buttons.add(notes);
     buttons.add(specsBtn);
+    buttons.add(sortBox);
 
     card.add(buttons, BorderLayout.SOUTH);
 
@@ -1022,6 +1037,35 @@ public class DgpMainFrame extends JFrame {
                 }
         );
     }
+
+    private void sortProjects(String option) {
+
+        if (option == null || option.equals("Sort by Date")) {
+                return;
+        }
+
+        int column;
+
+        if (option.startsWith("Start Date")) {
+                column = 4;
+        } else {
+                column = 5;
+        }
+
+        boolean ascending =
+                option.contains("Earliest → Latest");
+
+        projectTable.getRowSorter().setSortKeys(
+                java.util.List.of(
+                        new javax.swing.RowSorter.SortKey(
+                                column,
+                                ascending
+                                        ? javax.swing.SortOrder.ASCENDING
+                                        : javax.swing.SortOrder.DESCENDING
+                        )
+                )
+        );
+        }
     // ---------- PROJECT FILTER ----------
         private void loadProjectsForSelectedClient() {
 
