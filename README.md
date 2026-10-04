@@ -1,1 +1,1 @@
-This project is for my family company to aid tracking of projects and clients
+This project is for my parents' business to aid tracking of projects and clients
