@@ -1,9 +1,19 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.LocalDate;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
+import org.jdatepicker.JDatePicker;
+import org.jdatepicker.JDatePanel;
+import org.jdatepicker.impl.JDatePanelImpl;
+import org.jdatepicker.impl.JDatePickerImpl;
+import org.jdatepicker.impl.UtilDateModel;
+
+import java.util.Properties;
 
 public class DgpMainFrame extends JFrame {
 
@@ -15,294 +25,1332 @@ public class DgpMainFrame extends JFrame {
 
     private DefaultTableModel projectTableModel;
     private JTable projectTable;
-    private JTextField clientNameSearchField;
+    private JComboBox<Client> clientDropdown;
+
+    // ---------- DESIGN SYSTEM ----------
+    private static final Color NAVY = new Color(24, 32, 45);
+    private static final Color NAVY_LIGHT = new Color(35, 45, 61);
+    private static final Color ACCENT = new Color(37, 99, 235);
+    private static final Color ACCENT_DARK = new Color(29, 78, 216);
+    private static final Color BG = new Color(245, 247, 250);
+    private static final Color CARD = Color.WHITE;
+    private static final Color TEXT = new Color(31, 41, 55);
+    private static final Color MUTED = new Color(107, 114, 128);
+    private static final Color BORDER = new Color(229, 231, 235);
+    private static final Color SUCCESS = new Color(22, 163, 74);
+    private static final Color DANGER = new Color(220, 38, 38);
+
+    private static final Font TITLE_FONT =
+            new Font("SansSerif", Font.BOLD, 24);
+
+    private static final Font SECTION_FONT =
+            new Font("SansSerif", Font.BOLD, 18);
+
+    private static final Font BODY_FONT =
+            new Font("SansSerif", Font.PLAIN, 13);
+
+    private static final Font BUTTON_FONT =
+            new Font("SansSerif", Font.BOLD, 12);
 
     public DgpMainFrame() {
         setTitle("DGP Advertising - Client & Project Manager");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 650);
+        setSize(1280, 760);
+        setMinimumSize(new Dimension(1050, 650));
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
 
-        add(createHeaderPanel(), BorderLayout.NORTH);
+        applyLookAndFeel();
+        setContentPane(createMainPanel());
+    }
+
+    private void applyLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(
+                    UIManager.getSystemLookAndFeelClassName()
+            );
+        } catch (Exception ignored) {
+        }
+
+        UIManager.put("Panel.background", BG);
+        UIManager.put("OptionPane.background", CARD);
+        UIManager.put("OptionPane.messageFont", BODY_FONT);
+        UIManager.put("TextField.font", BODY_FONT);
+        UIManager.put("TextArea.font", BODY_FONT);
+        UIManager.put("ComboBox.font", BODY_FONT);
+        UIManager.put("Table.font", BODY_FONT);
+        UIManager.put(
+                "TableHeader.font",
+                new Font("SansSerif", Font.BOLD, 12)
+        );
+    }
+
+    // ---------- MAIN LAYOUT ----------
+
+    private JPanel createMainPanel() {
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(BG);
+
+        root.add(createSidebar(), BorderLayout.WEST);
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(BG);
+
+        content.add(createHeaderPanel(), BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(new Font("SansSerif", Font.BOLD, 13));
+        tabs.setBackground(BG);
+        tabs.setBorder(
+                BorderFactory.createEmptyBorder(
+                        0, 16, 16, 16
+                )
+        );
+
         tabs.addTab("Clients", createClientsPanel());
         tabs.addTab("Projects", createProjectsPanel());
-        add(tabs, BorderLayout.CENTER);
+
+        content.add(tabs, BorderLayout.CENTER);
+
+        root.add(content, BorderLayout.CENTER);
+
+        return root;
     }
 
-    // ---------- HEADER ----------
-    private JPanel createHeaderPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        JLabel title = new JLabel("DGP Advertising - Client & Project Manager");
-        title.setFont(new Font("SansSerif", Font.BOLD, 20));
-        panel.add(title, BorderLayout.CENTER);
-        return panel;
+    // ---------- SIDEBAR ----------
+
+    private JPanel createSidebar() {
+        JPanel sidebar = new JPanel(new BorderLayout());
+
+        sidebar.setBackground(NAVY);
+        sidebar.setPreferredSize(new Dimension(210, 0));
+        sidebar.setBorder(
+                new EmptyBorder(24, 18, 20, 18)
+        );
+
+        JPanel brand = new JPanel();
+        brand.setOpaque(false);
+
+        brand.setLayout(
+                new BoxLayout(
+                        brand,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        JLabel logo = new JLabel("DGP");
+        logo.setForeground(Color.WHITE);
+        logo.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        30
+                )
+        );
+        logo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel subtitle = new JLabel("ADVERTISING");
+        subtitle.setForeground(
+                new Color(174, 184, 198)
+        );
+        subtitle.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        11
+                )
+        );
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        brand.add(logo);
+        brand.add(Box.createVerticalStrut(1));
+        brand.add(subtitle);
+
+        brand.add(
+                Box.createVerticalStrut(30)
+        );
+
+        JLabel section = new JLabel("WORKSPACE");
+        section.setForeground(
+                new Color(130, 142, 160)
+        );
+        section.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        10
+                )
+        );
+        section.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        brand.add(section);
+        brand.add(
+                Box.createVerticalStrut(8)
+        );
+
+        JButton clients =
+                createNavButton("Clients");
+
+        JButton projects =
+                createNavButton("Projects");
+
+        clients.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+        projects.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+        brand.add(clients);
+        brand.add(
+                Box.createVerticalStrut(4)
+        );
+        brand.add(projects);
+
+        JPanel nav = new JPanel();
+        nav.setOpaque(false);
+
+        nav.setLayout(
+                new BoxLayout(
+                        nav,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        nav.add(brand);
+
+        clients.addActionListener(
+                e -> selectTab(0)
+        );
+
+        projects.addActionListener(
+                e -> selectTab(1)
+        );
+
+        sidebar.add(
+                nav,
+                BorderLayout.NORTH
+        );
+
+        JLabel footer =
+                new JLabel(
+                        "Client & Project Manager"
+                );
+
+        footer.setForeground(
+                new Color(120, 131, 148)
+        );
+
+        footer.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.PLAIN,
+                        10
+                )
+        );
+
+        footer.setHorizontalAlignment(
+                SwingConstants.CENTER
+        );
+
+        sidebar.add(
+                footer,
+                BorderLayout.SOUTH
+        );
+
+        return sidebar;
     }
 
-    private Client showClientForm(Client existing) {
+    private JButton createNavButton(String text) {
+        JButton button =
+                new JButton("  " + text);
 
-    JTextField name = new JTextField();
-    JTextField contact = new JTextField();
-    JTextField phone = new JTextField();
-    JTextField email = new JTextField();
-    JTextField address = new JTextField();
-    JTextArea notes = new JTextArea(3, 20);
-    JComboBox<String> statusBox = new JComboBox<>(new String[]{"ACTIVE", "INACTIVE"});
+        button.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        13
+                )
+        );
 
+        button.setForeground(
+                Color.BLACK
+        );
 
-    if (existing != null) {
-        name.setText(existing.getName());
-        contact.setText(existing.getContactPerson());
-        phone.setText(existing.getPhone());
-        email.setText(existing.getEmail());
-        address.setText(existing.getAddress());
-        notes.setText(existing.getNotes());
-        statusBox.setSelectedItem(existing.getStatus());
+        button.setBackground(NAVY);
+
+        button.setHorizontalAlignment(
+                SwingConstants.LEFT
+        );
+
+        button.setBorder(
+                new EmptyBorder(
+                        11, 12, 11, 12
+                )
+        );
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+
+        button.setCursor(
+                Cursor.getPredefinedCursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        button.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        44
+                )
+        );
+
+        return button;
     }
 
-    JPanel panel = new JPanel(new GridLayout(0, 2, 10, 6));
-    panel.add(new JLabel("Name"));
-    panel.add(name);
-    panel.add(new JLabel("Contact"));
-    panel.add(contact);
-    panel.add(new JLabel("Phone"));
-    panel.add(phone);
-    panel.add(new JLabel("Email"));
-    panel.add(email);
-    panel.add(new JLabel("Address"));
-    panel.add(address);
-    panel.add(new JLabel("Notes"));
-    panel.add(new JScrollPane(notes));
-    panel.add(new JLabel("Status"));
-    panel.add(statusBox);
+    private void selectTab(int index) {
+        Container content =
+                getContentPane();
 
+        if (content instanceof JPanel root) {
 
-    int result = JOptionPane.showConfirmDialog(
-            this,
-            panel,
-            existing == null ? "Add Client" : "Edit Client",
-            JOptionPane.OK_CANCEL_OPTION
-    );
+            Component center =
+                    ((BorderLayout) root.getLayout())
+                            .getLayoutComponent(
+                                    BorderLayout.CENTER
+                            );
 
-    if (result != JOptionPane.OK_OPTION) return null;
+            if (center instanceof JPanel panel) {
 
-    Client c = new Client();
-    c.setName(name.getText().trim());
-    c.setContactPerson(contact.getText().trim());
-    c.setPhone(phone.getText().trim());
-    c.setEmail(email.getText().trim());
-    c.setAddress(address.getText().trim());
-    c.setNotes(notes.getText().trim());
-    c.setStatus((String) statusBox.getSelectedItem());
+                Component tabsComponent =
+                        ((BorderLayout) panel.getLayout())
+                                .getLayoutComponent(
+                                        BorderLayout.CENTER
+                                );
 
-    return c;
-}
-
-
-    // ---------- CLIENTS TAB ----------
-    private JPanel createClientsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        clientTableModel = new DefaultTableModel(
-                new Object[]{"Client ID","Name","Contact","Phone","Email", "Address", "Status"},0) {
-            public boolean isCellEditable(int r,int c){ return false; }
-        };
-        clientTable = new JTable(clientTableModel);
-        panel.add(new JScrollPane(clientTable), BorderLayout.CENTER);
-
-        JPanel buttons = new JPanel();
-
-        JButton refresh = new JButton("Refresh");
-        JButton add = new JButton("Add Client");
-        JButton edit = new JButton("Edit Client");
-        //deleted  JButton del = new JButton("Delete Client"); for security purposes.
-        JButton export = new JButton("Export CSV");
-        JButton viewNotes = new JButton("View Notes");
-        viewNotes.addActionListener(this::onViewClientNotes);
-        buttons.add(viewNotes);
-
-        refresh.addActionListener(e -> loadClients());
-        add.addActionListener(this::onAddClient);
-        edit.addActionListener(this::onEditClient);
-        //removed del.addActionListener(this::onDeleteClient); for security purposes.
-        export.addActionListener(this::onExportCSV);
-
-        buttons.add(refresh);
-        buttons.add(add);
-        buttons.add(edit);
-        //removed buttons.add(del); for security purposes
-        buttons.add(export);
-
-        panel.add(buttons, BorderLayout.SOUTH);
-        loadClients();
-        return panel;
-    }
-
-    private void loadClients() {
-        clientTableModel.setRowCount(0);
-        for (Client c : clientDao.getAllClients()) {
-            clientTableModel.addRow(new Object[]{
-                c.getClientId(), c.getName(),
-                c.getContactPerson(), c.getPhone(), c.getEmail(), c.getAddress(), c.getStatus()
-            });
-        }
-    }
-
-    // ---------- PROJECTS TAB ----------
-    private JPanel createProjectsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        JPanel top = new JPanel();
-        top.add(new JLabel("Client Name:"));
-        clientNameSearchField = new JTextField(20);
-        top.add(clientNameSearchField);
-        JButton searchBtn = new JButton("Search");
-        searchBtn.addActionListener(this::onSearchByClientName);
-        top.add(searchBtn);
-
-        panel.add(top, BorderLayout.NORTH);
-
-        projectTableModel = new DefaultTableModel(new Object[]{
-            "Project ID","Client Name","Project Name","Location",
-            "Start Date","End Date",
-            "PO #","Invoice #","DR #",
-            "Status","Cost (₱)"
-        },0){
-            public boolean isCellEditable(int r,int c){ return false; }
-        };
-
-        projectTable = new JTable(projectTableModel);
-        panel.add(new JScrollPane(projectTable), BorderLayout.CENTER);
-
-        JPanel buttons = new JPanel();
-        JButton add = new JButton("Add Project");
-        JButton edit = new JButton("Edit Project");
-        JButton del = new JButton("Delete Project");
-        JButton notes = new JButton("Show Notes");
-        JButton specsBtn = new JButton("Show Specs");
-        specsBtn.addActionListener(this::onShowSpecs);
-        buttons.add(specsBtn);
-
-        add.addActionListener(this::onAddProject);
-        edit.addActionListener(this::onEditProject);
-        del.addActionListener(this::onDeleteProject);
-        notes.addActionListener(this::onShowNotes);
-
-        buttons.add(add);
-        buttons.add(edit);
-        buttons.add(del);
-        buttons.add(notes);
-
-        panel.add(buttons, BorderLayout.SOUTH);
-        return panel;
-    }
-
-    // ---------- PROJECT SEARCH ----------
-    private void onSearchByClientName(ActionEvent e) {
-        String name = clientNameSearchField.getText().trim().toLowerCase();
-        projectTableModel.setRowCount(0);
-
-        for (Client c : clientDao.getAllClients()) {
-            if (!c.getName().toLowerCase().contains(name)) continue;
-
-            for (Project p : projectDao.getProjectsByClient(c.getClientId())) {
-                projectTableModel.addRow(new Object[]{
-                    p.getProjectId(),
-                    c.getName(),
-                    p.getProjectName(),
-                    p.getLocation(),
-                    p.getDateStarted(),
-                    p.getDateCompleted(),
-                    p.getPoNumber(),
-                    p.getSalesInvoice(),
-                    p.getDrNumber(),
-                    p.getStatus(),
-                    p.getTotalCost()
-                });
+                if (tabsComponent instanceof JTabbedPane tabs) {
+                    tabs.setSelectedIndex(index);
+                }
             }
         }
     }
 
-    // ---------- ADD / EDIT / DELETE CLIENT ----------
+    // ---------- HEADER ----------
 
-private void onAddClient(ActionEvent e) {
-    Client c = showClientForm(null);
-    if (c != null) {
-        clientDao.addClient(c);
+    private JPanel createHeaderPanel() {
+
+        JPanel panel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        panel.setBackground(BG);
+
+        panel.setBorder(
+                new EmptyBorder(
+                        24, 24, 14, 24
+                )
+        );
+
+        JPanel titles = new JPanel();
+
+        titles.setOpaque(false);
+
+        titles.setLayout(
+                new BoxLayout(
+                        titles,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        JLabel title =
+                new JLabel(
+                        "Client & Project Manager"
+                );
+
+        title.setFont(TITLE_FONT);
+        title.setForeground(TEXT);
+
+        JLabel subtitle =
+                new JLabel(
+                        "V2.0"
+                );
+
+        subtitle.setFont(BODY_FONT);
+        subtitle.setForeground(MUTED);
+
+        titles.add(title);
+
+        titles.add(
+                Box.createVerticalStrut(4)
+        );
+
+        titles.add(subtitle);
+
+        panel.add(
+                titles,
+                BorderLayout.WEST
+        );
+
+        return panel;
+    }
+
+    // ---------- CARD ----------
+
+    private JPanel cardPanel() {
+
+        JPanel panel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        panel.setBackground(CARD);
+
+        panel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        new EmptyBorder(
+                                16, 16, 16, 16
+                        )
+                )
+        );
+
+        return panel;
+    }
+
+    // ---------- BUTTONS ----------
+
+    private JButton createButton(
+            String text,
+            Color background
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(BUTTON_FONT);
+        button.setForeground(Color.BLACK);
+        button.setBackground(background);
+        button.setBorder(
+                new EmptyBorder(
+                        9, 14, 9, 14
+                )
+        );
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+
+        button.setCursor(
+                Cursor.getPredefinedCursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createSecondaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(BUTTON_FONT);
+        button.setForeground(Color.BLACK);
+        button.setBackground(Color.WHITE);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        new EmptyBorder(
+                                8, 13, 8, 13
+                        )
+                )
+        );
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+
+        button.setCursor(
+                Cursor.getPredefinedCursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    // ---------- TABLE STYLING ----------
+
+    private void styleTable(JTable table) {
+
+        table.setFont(BODY_FONT);
+        table.setRowHeight(34);
+
+        table.setShowGrid(false);
+
+        table.setIntercellSpacing(
+                new Dimension(0, 0)
+        );
+
+        table.setSelectionBackground(
+                new Color(219, 234, 254)
+        );
+
+        table.setSelectionForeground(TEXT);
+
+        table.setFillsViewportHeight(true);
+
+        table.setAutoCreateRowSorter(true);
+
+        table.getTableHeader().setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        12
+                )
+        );
+
+        table.getTableHeader().setForeground(
+                MUTED
+        );
+
+        table.getTableHeader().setBackground(
+                new Color(249, 250, 251)
+        );
+
+        table.getTableHeader().setBorder(
+                BorderFactory.createMatteBorder(
+                        0, 0, 1, 0, BORDER
+                )
+        );
+
+        table.getTableHeader().setPreferredSize(
+                new Dimension(0, 38)
+        );
+
+        DefaultTableCellRenderer left =
+                new DefaultTableCellRenderer();
+
+        left.setBorder(
+                new EmptyBorder(
+                        0, 8, 0, 8
+                )
+        );
+
+        left.setVerticalAlignment(
+                SwingConstants.CENTER
+        );
+
+        table.setDefaultRenderer(
+                Object.class,
+                left
+        );
+    }
+
+    // ---------- CLIENTS TAB ----------
+
+    private JPanel createClientsPanel() {
+
+        JPanel outer =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        outer.setBackground(BG);
+
+        outer.setBorder(
+                new EmptyBorder(
+                        0, 0, 0, 0
+                )
+        );
+
+        JPanel card = cardPanel();
+
+        JPanel heading =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        heading.setOpaque(false);
+
+        JLabel title =
+                new JLabel("Clients");
+
+        title.setFont(SECTION_FONT);
+        title.setForeground(TEXT);
+
+        JLabel description =
+                new JLabel(
+                        "Manage your advertising clients and contact information."
+                );
+
+        description.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.PLAIN,
+                        12
+                )
+        );
+
+        description.setForeground(MUTED);
+
+        JPanel headingText =
+                new JPanel();
+
+        headingText.setOpaque(false);
+
+        headingText.setLayout(
+                new BoxLayout(
+                        headingText,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        headingText.add(title);
+
+        headingText.add(
+                Box.createVerticalStrut(3)
+        );
+
+        headingText.add(description);
+
+        heading.add(
+                headingText,
+                BorderLayout.WEST
+        );
+
+        JButton add =
+                createButton(
+                        "+ Add Client",
+                        ACCENT
+                );
+
+        add.addActionListener(
+                this::onAddClient
+        );
+
+        heading.add(
+                add,
+                BorderLayout.EAST
+        );
+
+        card.add(
+                heading,
+                BorderLayout.NORTH
+        );
+
+        clientTableModel =
+                new DefaultTableModel(
+                        new Object[]{
+                                "Client ID",
+                                "Name",
+                                "Contact",
+                                "Phone",
+                                "Email",
+                                "Address",
+                                "Status"
+                        },
+                        0
+                ) {
+                    @Override
+                    public boolean isCellEditable(
+                            int row,
+                            int column
+                    ) {
+                        return false;
+                    }
+                };
+
+        clientTable =
+                new JTable(
+                        clientTableModel
+                );
+
+        styleTable(clientTable);
+
+        JScrollPane scroll =
+                new JScrollPane(
+                        clientTable
+                );
+
+        scroll.setBorder(
+                BorderFactory.createLineBorder(
+                        BORDER
+                )
+        );
+
+        scroll.getViewport()
+                .setBackground(Color.WHITE);
+
+        JPanel tablePanel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        tablePanel.setBackground(Color.WHITE);
+
+        tablePanel.setBorder(
+                new EmptyBorder(
+                        16, 0, 0, 0
+                )
+        );
+
+        tablePanel.add(
+                scroll,
+                BorderLayout.CENTER
+        );
+
+        card.add(
+                tablePanel,
+                BorderLayout.CENTER
+        );
+
+        JPanel buttons =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                8,
+                                0
+                        )
+                );
+
+        buttons.setOpaque(false);
+
+        JButton refresh =
+                createSecondaryButton(
+                        "Refresh"
+                );
+
+        JButton edit =
+                createSecondaryButton(
+                        "Edit Client"
+                );
+
+        JButton viewNotes =
+                createSecondaryButton(
+                        "View Notes"
+                );
+
+        JButton export =
+                createButton(
+                        "Export CSV",
+                        ACCENT
+                );
+
+        refresh.addActionListener(
+                e -> loadClients()
+        );
+
+        edit.addActionListener(
+                this::onEditClient
+        );
+
+        viewNotes.addActionListener(
+                this::onViewClientNotes
+        );
+
+        export.addActionListener(
+                this::onExportCSV
+        );
+
+        buttons.add(refresh);
+        buttons.add(viewNotes);
+        buttons.add(edit);
+        buttons.add(export);
+
+        JPanel bottom =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        bottom.setOpaque(false);
+
+        bottom.setBorder(
+                new EmptyBorder(
+                        14, 0, 0, 0
+                )
+        );
+
+        bottom.add(
+                buttons,
+                BorderLayout.EAST
+        );
+
+        card.add(
+                bottom,
+                BorderLayout.SOUTH
+        );
+
+        outer.add(
+                card,
+                BorderLayout.CENTER
+        );
+
         loadClients();
-    }
-}
 
-private void onEditClient(ActionEvent e) {
-    int row = clientTable.getSelectedRow();
-    if (row == -1) {
-        JOptionPane.showMessageDialog(this, "Select a client first.");
-        return;
+        return outer;
     }
 
-    int clientId = (int) clientTableModel.getValueAt(row, 0);
-    Client existing = clientDao.getClientById(clientId);
+    private void loadClients() {
 
-    Client updated = showClientForm(existing);
-    if (updated != null) {
-        updated.setClientId(clientId);
-        clientDao.updateClient(updated);
-        loadClients();
-    }
-}
+        clientTableModel.setRowCount(0);
 
-    private LocalDate parseDateSafe(String text) {
-        try {
-            return LocalDate.parse(text.trim());
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Invalid date format.\nPlease use YYYY-MM-DD (e.g. 2025-12-01)"
+        for (Client c :
+                clientDao.getAllClients()) {
+
+            clientTableModel.addRow(
+                    new Object[]{
+                            c.getClientId(),
+                            c.getName(),
+                            c.getContactPerson(),
+                            c.getPhone(),
+                            c.getEmail(),
+                            c.getAddress(),
+                            c.getStatus()
+                    }
             );
-            return null;
         }
     }
 
-/* commented out for security purposes.
-    private void onDeleteClient(ActionEvent e) {
-        int row = clientTable.getSelectedRow();
-        if (row == -1) return;
+    // ---------- PROJECTS TAB ----------
 
-        int clientId = (int) clientTableModel.getValueAt(row, 0);
+    private JPanel createProjectsPanel() {
+    JPanel outer = new JPanel(new BorderLayout());
+    outer.setBackground(BG);
+    outer.setBorder(new EmptyBorder(0, 8, 8, 8));
 
-        if (JOptionPane.showConfirmDialog(
-                this,
-                "Delete this client and all projects?",
-                "Confirm",
-                JOptionPane.YES_NO_OPTION
-        ) == JOptionPane.YES_OPTION) {
+    JPanel card = cardPanel();
 
-            clientDao.deleteClient(clientId);
-            loadClients();
+    // ---------- TOP BAR ----------
+    JPanel top = new JPanel(new BorderLayout());
+    top.setOpaque(false);
+    top.setBorder(new EmptyBorder(0, 0, 14, 0));
+
+    JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(
+                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
+        );
+
+        JLabel projectTitle = new JLabel("Projects");
+        projectTitle.setFont(SECTION_FONT);
+        projectTitle.setForeground(TEXT);
+
+        JLabel projectDescription = new JLabel(
+                "Track project details, documents, costs, and status"
+        );
+        projectDescription.setFont(
+                new Font("SansSerif", Font.PLAIN, 12)
+        );
+        projectDescription.setForeground(MUTED);
+
+        titlePanel.add(projectTitle);
+        titlePanel.add(Box.createVerticalStrut(3));
+        titlePanel.add(projectDescription);
+
+        top.add(titlePanel, BorderLayout.WEST);
+
+    // ---------- CLIENT DROPDOWN ----------
+    JPanel selector = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+    selector.setOpaque(false);
+
+    JLabel clientLabel = new JLabel("Client:");
+    clientLabel.setFont(BODY_FONT);
+
+    clientDropdown = new JComboBox<>();
+    clientDropdown.setFont(BODY_FONT);
+    clientDropdown.setPreferredSize(new Dimension(220, 36));
+
+    // "All Clients" option
+    clientDropdown.addItem(null);
+
+    // Load all clients into dropdown
+    for (Client c : clientDao.getAllClients()) {
+        clientDropdown.addItem(c);
+    }
+
+    // Display client names instead of Java object references
+    clientDropdown.setRenderer(new DefaultListCellRenderer() {
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list,
+                Object value,
+                int index,
+                boolean isSelected,
+                boolean cellHasFocus) {
+
+            super.getListCellRendererComponent(
+                    list,
+                    value,
+                    index,
+                    isSelected,
+                    cellHasFocus
+            );
+
+            if (value == null) {
+                setText("All Clients");
+            } else if (value instanceof Client) {
+                setText(((Client) value).getName());
+            }
+
+            return this;
+        }
+    });
+
+    // Automatically update projects when client changes
+    clientDropdown.addActionListener(e -> loadProjectsForSelectedClient());
+
+    selector.add(clientLabel);
+    selector.add(clientDropdown);
+
+    top.add(selector, BorderLayout.EAST);
+
+    card.add(top, BorderLayout.NORTH);
+
+    // ---------- PROJECT TABLE ----------
+    projectTableModel = new DefaultTableModel(
+        new Object[]{
+            "ID",
+            "Client",
+            "Project",
+            "Location",
+            "Start Date",
+            "End Date",
+            "PO #",
+            "Invoice #",
+            "DR #",
+            "Status",
+            "Cost (₱)"
+        },
+        0
+    ) {
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+
+    projectTable = new JTable(projectTableModel);
+    styleTable(projectTable);
+
+    card.add(
+        new JScrollPane(projectTable),
+        BorderLayout.CENTER
+    );
+
+    // ---------- BUTTONS ----------
+    JPanel buttons = new JPanel(
+        new FlowLayout(FlowLayout.LEFT, 8, 14)
+    );
+    buttons.setOpaque(false);
+
+    JButton add = createButton("+  Add Project", ACCENT);
+    JButton edit = createSecondaryButton("Edit");
+    JButton del = createSecondaryButton("Delete");
+    JButton notes = createSecondaryButton("Show Notes");
+    JButton specsBtn = createSecondaryButton("Show Specs");
+
+    add.addActionListener(this::onAddProject);
+    edit.addActionListener(this::onEditProject);
+    del.addActionListener(this::onDeleteProject);
+    notes.addActionListener(this::onShowNotes);
+    specsBtn.addActionListener(this::onShowSpecs);
+
+    buttons.add(add);
+    buttons.add(edit);
+    buttons.add(del);
+    buttons.add(notes);
+    buttons.add(specsBtn);
+
+    card.add(buttons, BorderLayout.SOUTH);
+
+    outer.add(card, BorderLayout.CENTER);
+
+    // Initially show all projects
+    loadProjectsForSelectedClient();
+
+    return outer;
+}
+
+    // ---------- LOAD ALL PROJECTS ----------
+
+    private void loadAllProjects() {
+
+        projectTableModel.setRowCount(0);
+
+        for (Client c :
+                clientDao.getAllClients()) {
+
+            List<Project> projects =
+                    projectDao.getProjectsByClient(
+                            c.getClientId()
+                    );
+
+            for (Project p : projects) {
+
+                addProjectRow(
+                        c,
+                        p
+                );
+            }
         }
     }
- */
 
-    private void onViewClientNotes(ActionEvent e) {
-        int row = clientTable.getSelectedRow();
+    private void addProjectRow(
+            Client c,
+            Project p
+    ) {
+
+        projectTableModel.addRow(
+                new Object[]{
+                        p.getProjectId(),
+                        c.getName(),
+                        p.getProjectName(),
+                        p.getLocation(),
+                        p.getDateStarted(),
+                        p.getDateCompleted(),
+                        p.getPoNumber(),
+                        p.getSalesInvoice(),
+                        p.getDrNumber(),
+                        p.getStatus(),
+                        p.getTotalCost()
+                }
+        );
+    }
+    // ---------- PROJECT FILTER ----------
+        private void loadProjectsForSelectedClient() {
+
+    projectTableModel.setRowCount(0);
+
+        Client selectedClient =
+                (Client) clientDropdown.getSelectedItem();
+
+        // Show all projects
+        if (selectedClient == null) {
+
+                for (Client c : clientDao.getAllClients()) {
+
+                for (Project p :
+                        projectDao.getProjectsByClient(
+                                c.getClientId())) {
+
+                        addProjectRow(c, p);
+                }
+                }
+
+                return;
+        }
+
+        // Show only selected client's projects
+        for (Project p :
+                projectDao.getProjectsByClient(
+                        selectedClient.getClientId())) {
+
+                addProjectRow(selectedClient, p);
+        }
+        }
+
+        //helper
+
+    // ---------- CLIENT ADD ----------
+
+   private void onAddClient(ActionEvent e) {
+
+        Client c = showClientForm(null);
+
+        if (c != null) {
+
+                clientDao.addClient(c);
+
+                // Refresh clients table
+                loadClients();
+
+                // Add the new client to the Projects dropdown
+                if (clientDropdown != null) {
+                clientDropdown.addItem(c);
+                }
+        }
+        }
+
+    // ---------- CLIENT EDIT ----------
+
+    private void onEditClient(
+            ActionEvent e
+    ) {
+
+        int row =
+                clientTable.getSelectedRow();
+
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Select a client first.");
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a client first.",
+                    "No Client Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
             return;
         }
 
-        int clientId = (int) clientTableModel.getValueAt(row, 0);
-        Client c = clientDao.getClientById(clientId);
+        int modelRow =
+                clientTable.convertRowIndexToModel(
+                        row
+                );
 
-        JTextArea area = new JTextArea(c.getNotes());
+        int clientId =
+                (int) clientTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        Client existing =
+                clientDao.getClientById(
+                        clientId
+                );
+
+        Client updated =
+                showClientForm(existing);
+
+        if (updated != null) {
+
+            updated.setClientId(
+                    clientId
+            );
+
+            clientDao.updateClient(
+                    updated
+            );
+
+            loadClients();
+        }
+    }
+
+    // ---------- CLIENT FORM ----------
+
+    private Client showClientForm(
+            Client existing
+    ) {
+
+        JTextField name =
+                new JTextField();
+
+        JTextField contact =
+                new JTextField();
+
+        JTextField phone =
+                new JTextField();
+
+        JTextField email =
+                new JTextField();
+
+        JTextField address =
+                new JTextField();
+
+        JTextArea notes =
+                new JTextArea(4, 25);
+
+        notes.setLineWrap(true);
+        notes.setWrapStyleWord(true);
+
+        JComboBox<String> statusBox =
+                new JComboBox<>(
+                        new String[]{
+                                "ACTIVE",
+                                "INACTIVE"
+                        }
+                );
+
+        if (existing != null) {
+
+            name.setText(
+                    existing.getName()
+            );
+
+            contact.setText(
+                    existing.getContactPerson()
+            );
+
+            phone.setText(
+                    existing.getPhone()
+            );
+
+            email.setText(
+                    existing.getEmail()
+            );
+
+            address.setText(
+                    existing.getAddress()
+            );
+
+            notes.setText(
+                    existing.getNotes()
+            );
+
+            statusBox.setSelectedItem(
+                    existing.getStatus()
+            );
+        }
+
+        JPanel panel =
+                createFormPanel();
+
+        addFormRow(
+                panel,
+                "Client Name",
+                name
+        );
+
+        addFormRow(
+                panel,
+                "Contact Person",
+                contact
+        );
+
+        addFormRow(
+                panel,
+                "Phone",
+                phone
+        );
+
+        addFormRow(
+                panel,
+                "Email",
+                email
+        );
+
+        addFormRow(
+                panel,
+                "Address",
+                address
+        );
+
+        addFormRow(
+                panel,
+                "Status",
+                statusBox
+        );
+
+        addFormRow(
+                panel,
+                "Notes",
+                new JScrollPane(notes)
+        );
+
+        int result =
+                JOptionPane.showConfirmDialog(
+                        this,
+                        panel,
+                        existing == null
+                                ? "Add Client"
+                                : "Edit Client",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+        if (result != JOptionPane.OK_OPTION) {
+            return null;
+        }
+
+        Client c =
+                new Client();
+
+        c.setName(
+                name.getText().trim()
+        );
+
+        c.setContactPerson(
+                contact.getText().trim()
+        );
+
+        c.setPhone(
+                phone.getText().trim()
+        );
+
+        c.setEmail(
+                email.getText().trim()
+        );
+
+        c.setAddress(
+                address.getText().trim()
+        );
+
+        c.setNotes(
+                notes.getText().trim()
+        );
+
+        c.setStatus(
+                (String) statusBox.getSelectedItem()
+        );
+
+        return c;
+    }
+
+    // ---------- CLIENT NOTES ----------
+
+    private void onViewClientNotes(
+            ActionEvent e
+    ) {
+
+        int row =
+                clientTable.getSelectedRow();
+
+        if (row == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a client first.",
+                    "No Client Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        int modelRow =
+                clientTable.convertRowIndexToModel(
+                        row
+                );
+
+        int clientId =
+                (int) clientTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        Client c =
+                clientDao.getClientById(
+                        clientId
+                );
+
+        JTextArea area =
+                new JTextArea(
+                        c == null
+                                ? ""
+                                : c.getNotes()
+                );
+
         area.setEditable(false);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
+        area.setFont(BODY_FONT);
 
-        JScrollPane scroll = new JScrollPane(area);
-        scroll.setPreferredSize(new Dimension(400, 200));
+        JScrollPane scroll =
+                new JScrollPane(area);
+
+        scroll.setPreferredSize(
+                new Dimension(
+                        500,
+                        250
+                )
+        );
 
         JOptionPane.showMessageDialog(
                 this,
@@ -312,313 +1360,1022 @@ private void onEditClient(ActionEvent e) {
         );
     }
 
+    // ---------- DATE VALIDATION ----------
 
+    private LocalDate parseDateSafe(
+            String text
+    ) {
 
-    // ---------- ADD / EDIT / DELETE PROJECT ----------
-   private void onAddProject(ActionEvent e) {
-    String name = clientNameSearchField.getText().trim().toLowerCase();
+        try {
 
-    if (name.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Enter a client name first.");
-        return;
-    }
+            return LocalDate.parse(
+                    text.trim()
+            );
 
-    List<Client> matches = new java.util.ArrayList<>();
+        } catch (Exception e) {
 
-    for (Client c : clientDao.getAllClients()) {
-        if (c.getName().toLowerCase().contains(name)) {
-            matches.add(c);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid date format.\n"
+                            + "Please use YYYY-MM-DD "
+                            + "(e.g. 2025-12-01)",
+                    "Invalid Date",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return null;
         }
     }
 
-    if (matches.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "No matching client found.");
-        return;
-    }
+    // ---------- ADD PROJECT ----------
 
-    if (matches.size() > 1) {
-        JOptionPane.showMessageDialog(
-            this,
-            "Multiple clients match this name.\nPlease be more specific."
+    private void onAddProject(ActionEvent e) {
+
+        System.out.println("=== ADD PROJECT CLICKED ===");
+
+        Client selectedClient =
+                (Client) clientDropdown.getSelectedItem();
+
+        if (selectedClient == null) {
+
+                System.out.println("NO CLIENT SELECTED");
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a client first.",
+                        "Select Client",
+                        JOptionPane.WARNING_MESSAGE
+                );
+
+                return;
+        }
+
+        System.out.println(
+                "Selected client: "
+                + selectedClient.getName()
+                + " (ID: "
+                + selectedClient.getClientId()
+                + ")"
         );
-        return;
-    }
 
-    Client selectedClient = matches.get(0);
+        Project p = showProjectForm(null);
 
-    Project p = showProjectForm(null);
-    if (p != null) {
-        p.setClientId(selectedClient.getClientId());
+        if (p == null) {
+                System.out.println("Project form was cancelled.");
+                return;
+        }
+
+        System.out.println(
+                "Project created: "
+                + p.getProjectName()
+        );
+
+        p.setClientId(
+                selectedClient.getClientId()
+        );
+
+        System.out.println(
+                "Saving project with client ID: "
+                + p.getClientId()
+        );
+
         projectDao.addProject(p);
-        onSearchByClientName(null);
-    }
-}
 
-    private void onEditProject(ActionEvent e) {
-    int row = projectTable.getSelectedRow();
-    if (row == -1) {
-        JOptionPane.showMessageDialog(this, "Select a project first.");
-        return;
-    }
+        System.out.println("Project DAO add completed.");
 
-    int projectId = (int) projectTableModel.getValueAt(row, 0);
-    Project existing = projectDao.getProjectById(projectId);
+        loadProjectsForSelectedClient();
 
-    if (existing == null) {
-        JOptionPane.showMessageDialog(this, "Project not found.");
-        return;
-    }
+        System.out.println(
+                "Projects table refreshed."
+        );
+        }
 
-    Project updated = showProjectForm(existing);
-    if (updated != null) {
-        updated.setProjectId(projectId);
+    // ---------- EDIT PROJECT ----------
 
-        updated.setClientId(existing.getClientId());
+    private void onEditProject(
+            ActionEvent e
+    ) {
 
-        projectDao.updateProject(updated);
-        onSearchByClientName(null);
-    }
-}
+        int row =
+                projectTable.getSelectedRow();
 
-    private void onDeleteProject(ActionEvent e) {
-        int row = projectTable.getSelectedRow();
-        if (row == -1) return;
+        if (row == -1) {
 
-        int projectId = (int) projectTableModel.getValueAt(row,0);
-        if (JOptionPane.showConfirmDialog(
-            this,"Delete this project?","Confirm",
-            JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a project first.",
+                    "No Project Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
 
-            projectDao.deleteProject(projectId);
-            onSearchByClientName(null);
+            return;
+        }
+
+        int modelRow =
+                projectTable.convertRowIndexToModel(
+                        row
+                );
+
+        int projectId =
+                (int) projectTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        Project existing =
+                projectDao.getProjectById(
+                        projectId
+                );
+
+        if (existing == null) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Project not found.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+
+            return;
+        }
+
+        Project updated =
+                showProjectForm(
+                        existing
+                );
+
+        if (updated != null) {
+
+            updated.setProjectId(
+                    projectId
+            );
+
+            updated.setClientId(
+                    existing.getClientId()
+            );
+
+            projectDao.updateProject(
+                    updated
+            );
+
+            loadProjectsForSelectedClient();
         }
     }
-    private void onExportCSV(ActionEvent e) {
-    JFileChooser chooser = new JFileChooser();
-    chooser.setDialogTitle("Export Clients and Projects");
 
-    if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+    // ---------- DELETE PROJECT ----------
 
-    java.io.File file = chooser.getSelectedFile();
-    if (!file.getName().toLowerCase().endsWith(".csv")) {
-        file = new java.io.File(file.getAbsolutePath() + ".csv");
+    private void onDeleteProject(
+            ActionEvent e
+    ) {
+
+        int row =
+                projectTable.getSelectedRow();
+
+        if (row == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a project first.",
+                    "No Project Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        int modelRow =
+                projectTable.convertRowIndexToModel(
+                        row
+                );
+
+        int projectId =
+                (int) projectTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        if (JOptionPane.showConfirmDialog(
+                this,
+                "Delete this project?",
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        ) == JOptionPane.YES_OPTION) {
+
+            projectDao.deleteProject(
+                    projectId
+            );
+
+            loadProjectsForSelectedClient();
+        }
     }
 
-    try (java.io.PrintWriter pw = new java.io.PrintWriter(file)) {
+    // ---------- EXPORT CSV ----------
 
-        pw.println(
-            "Client ID,Client Name,Project ID,Project Name,Location," +
-            "Start Date,End Date,PO,Invoice,DR,Status,Cost,Notes,Specs"
+    private void onExportCSV(
+            ActionEvent e
+    ) {
+
+        JFileChooser chooser =
+                new JFileChooser();
+
+        chooser.setDialogTitle(
+                "Export Clients and Projects"
         );
 
+        if (chooser.showSaveDialog(this)
+                != JFileChooser.APPROVE_OPTION) {
 
-        for (Client c : clientDao.getAllClients()) {
-            List<Project> projects = projectDao.getProjectsByClient(c.getClientId());
+            return;
+        }
 
-            if (projects.isEmpty()) {
-                pw.printf("%d,\"%s\",,,,,,,,,\n",
-                        c.getClientId(), c.getName());
-            } else {
-                for (Project p : projects) {
-                    pw.printf(
-                        "%d,\"%s\",%d,\"%s\",\"%s\",%s,%s,%s,%s,%s,\"%s\",%.2f,\"%s\",\"%s\"\n",
-                        c.getClientId(),
-                        c.getName(),
-                        p.getProjectId(),
-                        p.getProjectName(),
-                        p.getLocation(),
-                        p.getDateStarted(),
-                        p.getDateCompleted(),
-                        p.getPoNumber(),
-                        p.getSalesInvoice(),
-                        p.getDrNumber(),
-                        p.getStatus(),
-                        p.getTotalCost(),
-                        escapeCsv(p.getNotes()),
-                        escapeCsv(p.getSpecs())
+        java.io.File file =
+                chooser.getSelectedFile();
+
+        if (!file.getName()
+                .toLowerCase()
+                .endsWith(".csv")) {
+
+            file =
+                    new java.io.File(
+                            file.getAbsolutePath()
+                                    + ".csv"
                     );
+        }
+
+        try (
+                java.io.PrintWriter pw =
+                        new java.io.PrintWriter(file)
+        ) {
+
+            pw.println(
+                    "Client ID,Client Name,"
+                            + "Project ID,Project Name,"
+                            + "Location,Start Date,"
+                            + "End Date,PO,Invoice,DR,"
+                            + "Status,Cost,Notes,Specs"
+            );
+
+            for (Client c :
+                    clientDao.getAllClients()) {
+
+                List<Project> projects =
+                        projectDao.getProjectsByClient(
+                                c.getClientId()
+                        );
+
+                if (projects.isEmpty()) {
+
+                    pw.printf(
+                            "%d,\"%s\",,,,,,,,,\n",
+                            c.getClientId(),
+                            escapeCsv(
+                                    c.getName()
+                            )
+                    );
+
+                } else {
+
+                    for (Project p :
+                            projects) {
+
+                        pw.printf(
+                                "%d,\"%s\",%d,\"%s\","
+                                        + "\"%s\",%s,%s,%s,%s,%s,"
+                                        + "\"%s\",%.2f,\"%s\",\"%s\"\n",
+
+                                c.getClientId(),
+
+                                escapeCsv(
+                                        c.getName()
+                                ),
+
+                                p.getProjectId(),
+
+                                escapeCsv(
+                                        p.getProjectName()
+                                ),
+
+                                escapeCsv(
+                                        p.getLocation()
+                                ),
+
+                                p.getDateStarted(),
+
+                                p.getDateCompleted(),
+
+                                p.getPoNumber(),
+
+                                p.getSalesInvoice(),
+
+                                p.getDrNumber(),
+
+                                escapeCsv(
+                                        p.getStatus()
+                                ),
+
+                                p.getTotalCost(),
+
+                                escapeCsv(
+                                        p.getNotes()
+                                ),
+
+                                escapeCsv(
+                                        p.getSpecs()
+                                )
+                        );
+                    }
                 }
             }
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Export successful:\n"
+                            + file.getAbsolutePath(),
+                    "Export Complete",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Export failed: "
+                            + ex.getMessage(),
+                    "Export Failed",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
-
-        JOptionPane.showMessageDialog(this,
-                "Export successful:\n" + file.getAbsolutePath());
-
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        JOptionPane.showMessageDialog(this,
-                "Export failed: " + ex.getMessage());
     }
-}
-
 
     // ---------- PROJECT FORM ----------
-    private Project showProjectForm(Project existing) {
 
-    JTextField nameField = new JTextField();
-    JTextField locationField = new JTextField();
-    JTextField startField = new JTextField();
-    JTextField endField = new JTextField();
-    JTextField poField = new JTextField();
-    JTextField invoiceField = new JTextField();
-    JTextField drField = new JTextField();
-    JComboBox<String> statusBox = new JComboBox<>(
-    new String[]{"----","ONGOING", "COMPLETED", "CANCELLED"}
-    );
-    JTextField costField = new JTextField();
-    JTextArea notesArea = new JTextArea(4, 20);
-    JTextArea specsArea = new JTextArea(4,20);
+    private Project showProjectForm(
+            Project existing
+    ) {
 
-    if (existing != null) {
-        nameField.setText(existing.getProjectName());
-        locationField.setText(existing.getLocation());
+        JTextField nameField =
+                new JTextField();
 
-        if (existing.getDateStarted() != null)
-            startField.setText(existing.getDateStarted().toString());
+        JTextField locationField =
+                new JTextField();
 
-        if (existing.getDateCompleted() != null)
-            endField.setText(existing.getDateCompleted().toString());
+        UtilDateModel startDateModel = new UtilDateModel();
+        UtilDateModel endDateModel = new UtilDateModel();
 
-        if (existing.getPoNumber() != null)
-            poField.setText(existing.getPoNumber().toString());
+        Properties dateProperties = new Properties();
+        dateProperties.put("text.today", "Today");
+        dateProperties.put("text.month", "Month");
+        dateProperties.put("text.year", "Year");
 
-        if (existing.getSalesInvoice() != null)
-            invoiceField.setText(existing.getSalesInvoice().toString());
+        JDatePanelImpl startDatePanel =
+                new JDatePanelImpl(
+                        startDateModel,
+                        dateProperties
+                );
 
-        if (existing.getDrNumber() != null)
-            drField.setText(existing.getDrNumber().toString());
+        JDatePickerImpl startDatePicker =
+                new JDatePickerImpl(
+                        startDatePanel,
+                        new DateLabelFormatter()
+                );
 
-        statusBox.setSelectedItem(existing.getStatus());
-        costField.setText(String.valueOf(existing.getTotalCost()));
-        notesArea.setText(existing.getNotes());
-        specsArea.setText(existing.getSpecs());
-    }
+        JDatePanelImpl endDatePanel =
+                new JDatePanelImpl(
+                        endDateModel,
+                        dateProperties
+                );
 
-    JPanel panel = new JPanel(new GridLayout(0,2,10,6));
-    panel.add(new JLabel("Project Name"));
-    panel.add(nameField);
-    panel.add(new JLabel("Location"));
-    panel.add(locationField);
-    panel.add(new JLabel("Start Date (YYYY-MM-DD)"));
-    panel.add(startField);
-    panel.add(new JLabel("End Date (YYYY-MM-DD)"));
-    panel.add(endField);
-    panel.add(new JLabel("PO Number"));
-    panel.add(poField);
-    panel.add(new JLabel("Sales Invoice"));
-    panel.add(invoiceField);
-    panel.add(new JLabel("DR Number"));
-    panel.add(drField);
-    panel.add(new JLabel("Status"));
-    panel.add(statusBox);
-    panel.add(new JLabel("Total Cost"));
-    panel.add(costField);
-    panel.add(new JLabel("Notes"));
-    panel.add(new JScrollPane(notesArea));
-    panel.add(new JLabel("Specs"));
-    panel.add(new JScrollPane(specsArea));
+        JDatePickerImpl endDatePicker =
+                new JDatePickerImpl(
+                        endDatePanel,
+                        new DateLabelFormatter()
+                );
 
-    int result = JOptionPane.showConfirmDialog(
-        this, panel,
-        existing == null ? "Add Project" : "Edit Project",
-        JOptionPane.OK_CANCEL_OPTION
-    );
+        JTextField poField =
+                new JTextField();
 
-    if (result != JOptionPane.OK_OPTION) return null;
+        JTextField invoiceField =
+                new JTextField();
 
-    Project p = new Project();
+        JTextField drField =
+                new JTextField();
 
-    // 🔑 CRITICAL: KEEP CLIENT ID ON EDIT
-    if (existing != null) {
-        p.setClientId(existing.getClientId());
-    }
+        JComboBox<String> statusBox =
+                new JComboBox<>(
+                        new String[]{
+                                "----",
+                                "ONGOING",
+                                "COMPLETED",
+                                "CANCELLED"
+                        }
+                );
 
-    p.setProjectName(nameField.getText().trim());
-    p.setLocation(locationField.getText().trim());
-    p.setStatus((String) statusBox.getSelectedItem());
-    p.setNotes(notesArea.getText().trim());
-    p.setSpecs(specsArea.getText().trim());
+        JTextField costField =
+                new JTextField();
 
-    if (!startField.getText().isBlank()) {
-    LocalDate d = parseDateSafe(startField.getText());
-    if (d == null) return null;   // stop saving if invalid
-    p.setDateStarted(d);
-    }
+        JTextArea notesArea =
+                new JTextArea(4, 25);
 
-    if (!endField.getText().isBlank()) {
-        LocalDate d = parseDateSafe(endField.getText());
-        if (d == null) return null;
+        JTextArea specsArea =
+                new JTextArea(4, 25);
+
+        notesArea.setLineWrap(true);
+        notesArea.setWrapStyleWord(true);
+
+        specsArea.setLineWrap(true);
+        specsArea.setWrapStyleWord(true);
+
+        if (existing != null) {
+
+            nameField.setText(
+                    existing.getProjectName()
+            );
+
+            locationField.setText(
+                    existing.getLocation()
+            );
+
+           if (existing.getDateStarted() != null) {
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+
+                cal.set(
+                        existing.getDateStarted().getYear(),
+                        existing.getDateStarted().getMonthValue() - 1,
+                        existing.getDateStarted().getDayOfMonth()
+                );
+
+                startDateModel.setValue(cal.getTime());
+                }
+
+                if (existing.getDateCompleted() != null) {
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+
+                cal.set(
+                        existing.getDateCompleted().getYear(),
+                        existing.getDateCompleted().getMonthValue() - 1,
+                        existing.getDateCompleted().getDayOfMonth()
+                );
+
+                endDateModel.setValue(cal.getTime());
+                }
+
+            if (existing.getPoNumber()
+                    != null) {
+
+                poField.setText(
+                        existing.getPoNumber()
+                                .toString()
+                );
+            }
+
+            if (existing.getSalesInvoice()
+                    != null) {
+
+                invoiceField.setText(
+                        existing.getSalesInvoice()
+                                .toString()
+                );
+            }
+
+            if (existing.getDrNumber()
+                    != null) {
+
+                drField.setText(
+                        existing.getDrNumber()
+                                .toString()
+                );
+            }
+
+            statusBox.setSelectedItem(
+                    existing.getStatus()
+            );
+
+            costField.setText(
+                    String.valueOf(
+                            existing.getTotalCost()
+                    )
+            );
+
+            notesArea.setText(
+                    existing.getNotes()
+            );
+
+            specsArea.setText(
+                    existing.getSpecs()
+            );
+        }
+
+        JPanel panel =
+                createFormPanel();
+
+        addFormRow(
+                panel,
+                "Project Name",
+                nameField
+        );
+
+        addFormRow(
+                panel,
+                "Location",
+                locationField
+        );
+
+       addFormRow(
+        panel,
+        "Start Date",
+        startDatePicker
+        );
+
+        addFormRow(
+                panel,
+                "End Date",
+                endDatePicker
+        );
+
+        addFormRow(
+                panel,
+                "PO Number",
+                poField
+        );
+
+        addFormRow(
+                panel,
+                "Sales Invoice",
+                invoiceField
+        );
+
+        addFormRow(
+                panel,
+                "DR Number",
+                drField
+        );
+
+        addFormRow(
+                panel,
+                "Status",
+                statusBox
+        );
+
+        addFormRow(
+                panel,
+                "Total Cost",
+                costField
+        );
+
+        addFormRow(
+                panel,
+                "Notes",
+                new JScrollPane(notesArea)
+        );
+
+        addFormRow(
+                panel,
+                "Specs",
+                new JScrollPane(specsArea)
+        );
+
+        JScrollPane formScroll =
+                new JScrollPane(panel);
+
+        formScroll.setBorder(null);
+
+        formScroll.setPreferredSize(
+                new Dimension(
+                        650,
+                        500
+                )
+        );
+
+        int result =
+                JOptionPane.showConfirmDialog(
+                        this,
+                        formScroll,
+                        existing == null
+                                ? "Add Project"
+                                : "Edit Project",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+        if (result != JOptionPane.OK_OPTION) {
+            return null;
+        }
+
+        Project p =
+                new Project();
+
+        // KEEP CLIENT ID ON EDIT
+        if (existing != null) {
+
+                p.setClientId(
+                        existing.getClientId()
+                );
+                }
+
+                p.setProjectName(
+                        nameField.getText().trim()
+                );
+
+                p.setLocation(
+                        locationField.getText().trim()
+                );
+
+                p.setStatus(
+                        (String) statusBox.getSelectedItem()
+                );
+
+                p.setNotes(
+                        notesArea.getText().trim()
+                );
+
+                p.setSpecs(
+                        specsArea.getText().trim()
+                );
+
+                if (startDateModel.getValue() != null) {
+
+        java.util.Date date =
+                (java.util.Date) startDateModel.getValue();
+
+        LocalDate d =
+                date.toInstant()
+                        .atZone(
+                                java.time.ZoneId.systemDefault()
+                        )
+                        .toLocalDate();
+
+        p.setDateStarted(d);
+
+        } else {
+
+        p.setDateStarted(null);
+        }
+
+
+        if (endDateModel.getValue() != null) {
+
+        java.util.Date date =
+                (java.util.Date) endDateModel.getValue();
+
+        LocalDate d =
+                date.toInstant()
+                        .atZone(
+                                java.time.ZoneId.systemDefault()
+                        )
+                        .toLocalDate();
+
         p.setDateCompleted(d);
+
+        } else {
+
+        p.setDateCompleted(null);
+        }
+
+        try {
+
+            if (!poField.getText()
+                    .isBlank()) {
+
+                p.setPoNumber(
+                        Integer.parseInt(
+                                poField.getText()
+                                        .trim()
+                        )
+                );
+            }
+
+            if (!invoiceField.getText()
+                    .isBlank()) {
+
+                p.setSalesInvoice(
+                        Integer.parseInt(
+                                invoiceField.getText()
+                                        .trim()
+                        )
+                );
+            }
+
+            if (!drField.getText()
+                    .isBlank()) {
+
+                p.setDrNumber(
+                        Integer.parseInt(
+                                drField.getText()
+                                        .trim()
+                        )
+                );
+            }
+
+        } catch (NumberFormatException ex) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "PO, Invoice, and DR numbers "
+                            + "must be valid whole numbers.",
+                    "Invalid Number",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return null;
+        }
+
+        try {
+
+            if (costField.getText()
+                    .isBlank()) {
+
+                p.setTotalCost(0);
+
+            } else {
+
+                p.setTotalCost(
+                        Double.parseDouble(
+                                costField.getText()
+                                        .trim()
+                        )
+                );
+            }
+
+        } catch (NumberFormatException ex) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Total cost must be a valid number.",
+                    "Invalid Cost",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return null;
+        }
+
+        return p;
     }
 
-    if (!poField.getText().isBlank())
-        p.setPoNumber(Integer.parseInt(poField.getText().trim()));
+    // ---------- FORM HELPERS ----------
 
-    if (!invoiceField.getText().isBlank())
-        p.setSalesInvoice(Integer.parseInt(invoiceField.getText().trim()));
+    private static class DateLabelFormatter
+                extends JFormattedTextField.AbstractFormatter {
 
-    if (!drField.getText().isBlank())
-        p.setDrNumber(Integer.parseInt(drField.getText().trim()));
+        private final java.text.SimpleDateFormat dateFormat =
+                new java.text.SimpleDateFormat("MMM dd, yyyy");
 
-    try {
-        p.setTotalCost(Double.parseDouble(costField.getText().trim()));
-    } catch (Exception ex) {
-        p.setTotalCost(0);
+        @Override
+        public Object stringToValue(String text)
+                throws java.text.ParseException {
+
+                return dateFormat.parse(text);
+        }
+
+        @Override
+        public String valueToString(Object value)
+                throws java.text.ParseException {
+
+                if (value == null) {
+                return "";
+                }
+
+                if (value instanceof java.util.Calendar) {
+                return dateFormat.format(
+                        ((java.util.Calendar) value).getTime()
+                );
+                }
+
+                if (value instanceof java.util.Date) {
+                return dateFormat.format(value);
+                }
+
+                return "";
+        }
+        }
+
+    private JPanel createFormPanel() {
+
+        JPanel panel =
+                new JPanel(
+                        new GridBagLayout()
+                );
+
+        panel.setBackground(CARD);
+
+        panel.setBorder(
+                new EmptyBorder(
+                        8, 8, 8, 8
+                )
+        );
+
+        return panel;
     }
 
-    return p;
-}
+    private void addFormRow(
+            JPanel panel,
+            String label,
+            Component component
+    ) {
 
-    //helper
-    private void onShowSpecs(ActionEvent e) {
-        int row = projectTable.getSelectedRow();
-        if (row == -1) return;
+        GridBagConstraints gbc =
+                new GridBagConstraints();
 
-        int projectId = (int) projectTableModel.getValueAt(row, 0);
-        Project p = projectDao.getProjectById(projectId);
+        gbc.insets =
+                new Insets(
+                        6, 6, 6, 6
+                );
 
-        JTextArea area = new JTextArea(p.getSpecs());
-        area.setEditable(false);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
 
-        JOptionPane.showMessageDialog(
-            this,
-            new JScrollPane(area),
-            "Project Specs",
-            JOptionPane.INFORMATION_MESSAGE
+        gbc.anchor =
+                GridBagConstraints.NORTHWEST;
+
+        gbc.gridx = 0;
+        gbc.gridy =
+                panel.getComponentCount();
+
+        gbc.weightx = 0;
+
+        JLabel labelComponent =
+                new JLabel(label);
+
+        labelComponent.setFont(
+                new Font(
+                        "SansSerif",
+                        Font.BOLD,
+                        12
+                )
+        );
+
+        labelComponent.setForeground(
+                TEXT
+        );
+
+        panel.add(
+                labelComponent,
+                gbc
+        );
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+
+        if (component instanceof JTextArea) {
+            gbc.fill =
+                    GridBagConstraints.BOTH;
+        }
+
+        panel.add(
+                component,
+                gbc
         );
     }
 
+    // ---------- PROJECT SPECS ----------
 
+    private void onShowSpecs(
+            ActionEvent e
+    ) {
 
-    // ---------- NOTES ----------
-    private void onShowNotes(ActionEvent e) {
-        int row = projectTable.getSelectedRow();
-        if (row == -1) return;
+        int row =
+                projectTable.getSelectedRow();
 
-        int projectId = (int) projectTableModel.getValueAt(row,0);
-        Project p = projectDao.getProjectById(projectId);
+        if (row == -1) {
 
-        JTextArea area = new JTextArea(p.getNotes());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a project first.",
+                    "No Project Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        int modelRow =
+                projectTable.convertRowIndexToModel(
+                        row
+                );
+
+        int projectId =
+                (int) projectTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        Project p =
+                projectDao.getProjectById(
+                        projectId
+                );
+
+        if (p == null) {
+            return;
+        }
+
+        JTextArea area =
+                new JTextArea(
+                        p.getSpecs()
+                );
+
         area.setEditable(false);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
+        area.setFont(BODY_FONT);
 
-        JOptionPane.showMessageDialog(this,new JScrollPane(area),
-            "Project Notes",JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(
+                this,
+                new JScrollPane(area),
+                "Project Specifications",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
-    //helper
+    // ---------- PROJECT NOTES ----------
 
-        private String escapeCsv(String value) {
-        if (value == null) return "";
-        return value.replace("\"", "\"\"");
+    private void onShowNotes(
+            ActionEvent e
+    ) {
+
+        int row =
+                projectTable.getSelectedRow();
+
+        if (row == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a project first.",
+                    "No Project Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        int modelRow =
+                projectTable.convertRowIndexToModel(
+                        row
+                );
+
+        int projectId =
+                (int) projectTableModel
+                        .getValueAt(
+                                modelRow,
+                                0
+                        );
+
+        Project p =
+                projectDao.getProjectById(
+                        projectId
+                );
+
+        if (p == null) {
+            return;
+        }
+
+        JTextArea area =
+                new JTextArea(
+                        p.getNotes()
+                );
+
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setFont(BODY_FONT);
+
+        JOptionPane.showMessageDialog(
+                this,
+                new JScrollPane(area),
+                "Project Notes",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
+    // ---------- CSV HELPER ----------
+
+    private String escapeCsv(
+            String value
+    ) {
+
+        if (value == null) {
+            return "";
+        }
+
+        return value.replace(
+                "\"",
+                "\"\""
+        );
+    }
 
     // ---------- MAIN ----------
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new DgpMainFrame().setVisible(true));
+
+    public static void main(
+            String[] args
+    ) {
+
+        SwingUtilities.invokeLater(
+                () -> new DgpMainFrame()
+                        .setVisible(true)
+        );
     }
 }
