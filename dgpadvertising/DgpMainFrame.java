@@ -517,7 +517,7 @@ public class DgpMainFrame extends JFrame {
         );
 
         table.getTableHeader().setForeground(
-                MUTED
+                Color.BLACK
         );
 
         table.getTableHeader().setBackground(
